@@ -16,7 +16,7 @@ def main():
 			if not key:
 				print("La clé ne peut pas être vide.")
 				continue
-			resultat = # Faire les étapes de chiffrement avec prim.etapes_chif
+			resultat = prim.step_chiff(message, key)
 			print("Message chiffré : ", resultat) 
 			return
 		elif choice == 2:
@@ -28,6 +28,6 @@ def main():
 			if not key:
 				print("La clé ne peut pas être vide.")
 				continue
-			resultat = # Faire les étapes de déchiffrement avec second.etapes_dechif
+			resultat = prm.step_dechiff(message, key)
 			print("Message déchiffré : ", resultat)
 			return
