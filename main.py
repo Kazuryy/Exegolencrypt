@@ -10,29 +10,33 @@ def main():
 		if choice == 1:
 			while True:
 				try:
-					choice2 = int(input("\nQue voulez-vous chiffrer ?\n1. fichier.txt.\n2. Message dans la console.\nMon choix : "))
+					choice2 = int(input("\nQue voulez-vous chiffrer ?\n1. fichier .txt.\n2. Message dans la console.\nMon choix : "))
 				except ValueError:
 					print("\n❌  Veuillez entrer un chiffre valide.\n")
 					continue
 				if choice2 == 1:
-					...
+					resultat = prim.chiffrer_text()
+					print(resultat)
 					return
 				elif choice2 == 2:
-					resultat = prim.chiffrer()
+					message, key = second.demand_msg_key()
+					resultat = prim.chiffrer(message, key)
 					print("Message chiffré : ", resultat) 
 					return
 		elif choice == 2:
 			while True:
 				try:
-					choice2 = int(input("\nQue voulez-vous déchiffrer ?\n1. fichier.txt.\n2. Message dans la console.\nMon choix : "))
+					choice2 = int(input("\nQue voulez-vous déchiffrer ?\n1. fichier .txt.\n2. Message dans la console.\nMon choix : "))
 				except ValueError:
 					print("\n❌  Veuillez entrer un chiffre valide.\n")
 					continue
 				if choice2 == 1:
-					...
+					resultat = prim.dechiffrer_text()
+					print(resultat)
 					return
 				elif choice2 == 2:
-					resultat = prim.dechiffrer()
+					message_chiffre, key = second.demand_msg_key()
+					resultat = prim.dechiffrer(message_chiffre, key)
 					print("Message déchiffré : ", resultat)
 					return
 

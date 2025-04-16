@@ -15,6 +15,15 @@ def demand_msg_key():
                 continue
             return message, key
 
+def demand_key():
+    while True:
+        key = input("\nQuelle est votre clé de chiffrement ?\nMa clé : ")
+        if not key:
+            print("❌  La clé ne peut pas être vide.")
+            continue
+        return key
+
+
 def generate_key_values(key):
     """
     Génère différentes valeurs dérivées de la clé pour être utilisées dans les différentes étapes
