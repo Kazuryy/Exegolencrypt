@@ -12,7 +12,7 @@ def main():
 			print("Message chiffré : ", resultat) 
 			return
 		elif choice == 2:
-			resultat = prm.steps_dechiff()
+			resultat = prim.steps_dechiff()
 			print("Message déchiffré : ", resultat)
 			return
 
