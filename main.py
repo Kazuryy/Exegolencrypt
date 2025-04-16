@@ -8,11 +8,11 @@ def main():
 			print("\n❌  Veuillez entrer un chiffre valide.\n")
 			continue
 		if choice == 1:
-			resultat = prim.steps_chiff()
+			resultat = prim.chiffrer()
 			print("Message chiffré : ", resultat) 
 			return
 		elif choice == 2:
-			resultat = prim.steps_dechiff()
+			resultat = prim.dechiffrer()
 			print("Message déchiffré : ", resultat)
 			return
 
