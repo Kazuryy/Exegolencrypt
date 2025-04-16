@@ -65,7 +65,6 @@ def dechiffrer():
     try:
         # Générer les mêmes valeurs dérivées de la clé
         key_values = second.generate_key_values(key)
-        caesar_shift = key_values['caesar_shift']
         block_size = key_values['block_size']
         char_values = key_values['char_values']
         fingerprint = key_values['fingerprint']
