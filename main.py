@@ -5,7 +5,7 @@ def main():
 		try:
 			choice = int(input("Que souhaitez-vous faire ?\n1. Chiffrer mon message.\n2. Déchiffrer mon message.\nMon choix : "))
 		except ValueError:
-			print("Veuillez entrer un chiffre valide.")
+			print("\n❌  Veuillez entrer un chiffre valide.\n")
 			continue
 		if choice == 1:
 			resultat = prim.steps_chiff()

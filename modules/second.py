@@ -8,11 +8,12 @@ def demand_msg_key():
         if not message:
             print("❌  Le message ne peut pas être vide.")
             continue
-        key = input("\nQuelle est votre clé de chiffrement ?\nMa clé : ")
-        if not key:
-            print("❌  La clé ne peut pas être vide.")
-            continue
-        return message, key
+        while True:
+            key = input("\nQuelle est votre clé de chiffrement ?\nMa clé : ")
+            if not key:
+                print("❌  La clé ne peut pas être vide.")
+                continue
+            return message, key
 
 # Chiffrement
 

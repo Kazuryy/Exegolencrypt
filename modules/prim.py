@@ -3,7 +3,8 @@ from . import second
 # Chiffrement
 
 def steps_chiff():
-    return second.demand_msg_key()
+    msg, key = second.demand_msg_key()
+    return msg
 
 # Déchiffrement
 
