@@ -12,7 +12,6 @@ def chiffrer():
     try:
         # Générer les valeurs dérivées de la clé
         key_values = second.generate_key_values(key)
-        caesar_shift = key_values['caesar_shift']
         block_size = key_values['block_size']
         char_values = key_values['char_values']
         fingerprint = key_values['fingerprint']
@@ -46,7 +45,7 @@ def chiffrer():
             key_value = char_values[i % len(char_values)]
             xored_value = ord(char) ^ key_value
             xored += chr(xored_value % 65536)  # S'assurer que nous restons dans la plage Unicode valide
-        
+
         # Étape 6: Encodage final
         result = second.secure_encode(xored)
         return result

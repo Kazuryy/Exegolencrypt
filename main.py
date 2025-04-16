@@ -8,12 +8,32 @@ def main():
 			print("\n❌  Veuillez entrer un chiffre valide.\n")
 			continue
 		if choice == 1:
-			resultat = prim.chiffrer()
-			print("Message chiffré : ", resultat) 
-			return
+			while True:
+				try:
+					choice2 = int(input("Que voulez-vous chiffrer ?\n1. fichier.txt.\n2. Message dans la console.\nMon choix : "))
+				except ValueError:
+					print("\n❌  Veuillez entrer un chiffre valide.\n")
+					continue
+				if choice2 == 1:
+					...
+					return
+				elif choice2 == 2:
+					resultat = prim.chiffrer()
+					print("Message chiffré : ", resultat) 
+					return
 		elif choice == 2:
-			resultat = prim.dechiffrer()
-			print("Message déchiffré : ", resultat)
-			return
+			while True:
+				try:
+					choice2 = int(input("Que voulez-vous déchiffrer ?\n1. fichier.txt.\n2. Message dans la console.\nMon choix : "))
+				except ValueError:
+					print("\n❌  Veuillez entrer un chiffre valide.\n")
+					continue
+				if choice2 == 1:
+					...
+					return
+				elif choice2 == 2:
+					resultat = prim.dechiffrer()
+					print("Message déchiffré : ", resultat)
+					return
 
 main()
