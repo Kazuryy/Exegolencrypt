@@ -10,7 +10,7 @@ def main():
 		if choice == 1:
 			while True:
 				try:
-					choice2 = int(input("Que voulez-vous chiffrer ?\n1. fichier.txt.\n2. Message dans la console.\nMon choix : "))
+					choice2 = int(input("\nQue voulez-vous chiffrer ?\n1. fichier.txt.\n2. Message dans la console.\nMon choix : "))
 				except ValueError:
 					print("\n❌  Veuillez entrer un chiffre valide.\n")
 					continue
@@ -24,7 +24,7 @@ def main():
 		elif choice == 2:
 			while True:
 				try:
-					choice2 = int(input("Que voulez-vous déchiffrer ?\n1. fichier.txt.\n2. Message dans la console.\nMon choix : "))
+					choice2 = int(input("\nQue voulez-vous déchiffrer ?\n1. fichier.txt.\n2. Message dans la console.\nMon choix : "))
 				except ValueError:
 					print("\n❌  Veuillez entrer un chiffre valide.\n")
 					continue
