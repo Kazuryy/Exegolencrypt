@@ -2,6 +2,9 @@
 from . import second
 import tkinter as tk
 from tkinter import filedialog
+import zipfile
+import tempfile
+import os
 
 # Chiffrement
 
@@ -88,6 +91,74 @@ def chiffrer_text():
     except Exception as e:
         return f"Une erreur inattendue s'est produite : {e}"
 
+def chiffrer_dossier(chemin_dossier, cle):
+    """Chiffre un dossier entier en le compressant d'abord en ZIP"""
+    chemin_sortie = chemin_dossier + ".encrypted"
+    
+    try:
+        # Créer un fichier ZIP temporaire contenant tous les fichiers du dossier
+        temp_zip = tempfile.mktemp(suffix='.zip')
+        with zipfile.ZipFile(temp_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, _, files in os.walk(chemin_dossier):
+                for file in files:
+                    chemin_complet = os.path.join(root, file)
+                    chemin_relatif = os.path.relpath(chemin_complet, os.path.dirname(chemin_dossier))
+                    zipf.write(chemin_complet, chemin_relatif)
+        print(f"Fichier ZIP temporaire créé : {temp_zip}")
+        
+        # Lire le fichier ZIP en tant que données binaires
+        with open(temp_zip, 'rb') as f:
+            donnees_zip = f.read()
+        
+        # Convertir les données binaires en chaîne hexadécimale
+        print("temp")
+        donnees_hex = second.binary_to_hex_string(donnees_zip)
+        
+        # Chiffrer la chaîne hexadécimale
+        donnees_chiffrees = chiffrer(donnees_hex, cle)
+        print("\nzebi2", donnees_chiffrees)
+        
+        # Écrire le résultat
+        with open(chemin_sortie, 'w', encoding='utf-8') as f:
+            f.write(donnees_chiffrees)
+        
+        # Supprimer le ZIP temporaire
+        os.remove(temp_zip)
+        
+        return chemin_sortie
+    except Exception as e:
+        return f"Erreur lors du chiffrement du dossier: {str(e)}"
+
+def dechiffrer_dossier(chemin_fichier_chiffre, cle, chemin_dossier_sortie):
+    """Déchiffre un dossier chiffré et extrait son contenu"""
+    try:
+        # Lire le fichier chiffré
+        with open(chemin_fichier_chiffre, 'r', encoding='utf-8') as f:
+            donnees_chiffrees = f.read()
+        
+        # Déchiffrer les données
+        donnees_hex = dechiffrer(donnees_chiffrees, cle)
+        
+        # Convertir la chaîne hexadécimale en données binaires
+        donnees_zip = second.hex_string_to_binary(donnees_hex)
+        
+        # Créer un fichier ZIP temporaire
+        temp_zip = tempfile.mktemp(suffix='.zip')
+        with open(temp_zip, 'wb') as f:
+            f.write(donnees_zip)
+        
+        # Extraire le ZIP dans le dossier cible
+        os.makedirs(chemin_dossier_sortie, exist_ok=True)
+        with zipfile.ZipFile(temp_zip, 'r') as zipf:
+            zipf.extractall(chemin_dossier_sortie)
+        
+        # Supprimer le ZIP temporaire
+        os.remove(temp_zip)
+        
+        return chemin_dossier_sortie
+    except Exception as e:
+        return f"Erreur lors du déchiffrement: {str(e)}"
+
 # Déchiffrement
 
 def dechiffrer(message_chiffre, key):
@@ -148,22 +219,6 @@ def dechiffrer(message_chiffre, key):
         return f"Erreur de déchiffrement: {str(e)}"
 
 def dechiffrer_text():
-    root = tk.Tk()
-    root.withdraw()
-
-    file_path = filedialog.askopenfilename()
-
-    with open(file_path, 'r') as file:
-        contenu = file.read()
-    key = second.demand_key()
-    contenu_dechiffre = dechiffrer(contenu, key)
-
-    with open(file_path, 'w') as file2:
-        file2.write(contenu_dechiffre)
-
-    return f"Retrouvez votre fichier .txt ici : {file_path}"
-
-def dechiffrer_text():
     try:
         root = tk.Tk()
         root.withdraw()
@@ -195,3 +250,60 @@ def dechiffrer_text():
 
     except Exception as e:
         return f"Une erreur inattendue s'est produite : {e}"
+
+def selectionner_dossier(titre="Sélectionner un dossier"):
+    """Ouvre une boîte de dialogue pour sélectionner un dossier et retourne son chemin"""
+    root = tk.Tk()
+    root.withdraw()  # Cacher la fenêtre principale
+    
+    chemin_dossier = filedialog.askdirectory(
+        title=titre
+    )
+    
+    return chemin_dossier if chemin_dossier else None
+
+def chiffrer_dossier_avec_dialogue():
+    """Chiffre un dossier avec des boîtes de dialogue"""
+    dossier_source = selectionner_dossier("Sélectionner le dossier à chiffrer")
+    
+    if not dossier_source:
+        return "Aucun dossier sélectionné."
+    
+    cle = second.demand_key()
+    
+    try:
+        chemin_resultat = chiffrer_dossier(dossier_source, cle)
+        return f"✅  Dossier chiffré enregistré sous: {chemin_resultat}"
+    except Exception as e:
+        return f"Erreur lors du chiffrement: {str(e)}"
+
+def dechiffrer_dossier_avec_dialogue():
+    """Déchiffre un dossier avec des boîtes de dialogue"""
+    root = tk.Tk()
+    root.withdraw()
+    
+    # Laisser l'utilisateur sélectionner n'importe quel fichier
+    fichier_source = filedialog.askopenfilename(
+        title="Sélectionner le fichier de dossier chiffré (.encrypted)",
+        # Ne pas spécifier de filtres pour éviter les problèmes
+    )
+    
+    if not fichier_source:
+        return "Aucun fichier sélectionné."
+    
+    # Vérifier manuellement l'extension après la sélection
+    if not fichier_source.endswith(".encrypted"):
+        return f"❌ Erreur: Le fichier sélectionné n'est pas un fichier .encrypted. Veuillez sélectionner un fichier chiffré valide."
+    
+    dossier_destination = selectionner_dossier("Sélectionner où extraire le dossier déchiffré")
+    
+    if not dossier_destination:
+        return "Aucun dossier de destination sélectionné."
+    
+    cle = second.demand_key()
+    
+    try:
+        chemin_resultat = dechiffrer_dossier(fichier_source, cle, dossier_destination)
+        return f"✅  Dossier déchiffré extrait vers: {chemin_resultat}"
+    except Exception as e:
+        return f"Erreur lors du déchiffrement: {str(e)}"

@@ -120,3 +120,17 @@ def secure_decode(encoded):
     except UnicodeDecodeError:
         # En cas d'erreur, essayer de récupérer ce qu'on peut
         return result_bytes.decode('utf-8', errors='replace')
+
+# Nouvelles fonctions pour gérer les données binaires
+def binary_to_hex_string(binary_data):
+    """Convertit des données binaires en chaîne hexadécimale"""
+    return ''.join('{:02x}'.format(b) for b in binary_data)
+
+def hex_string_to_binary(hex_string):
+    """Convertit une chaîne hexadécimale en données binaires"""
+    result = bytearray()
+    for i in range(0, len(hex_string), 2):
+        if i + 1 < len(hex_string):
+            byte = int(hex_string[i:i+2], 16)
+            result.append(byte)
+    return result
