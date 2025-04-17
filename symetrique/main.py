@@ -1,7 +1,4 @@
 from modules import prim, second
-from tkinter import filedialog
-import tkinter as tk
-import os
 
 def main():
     while True:
