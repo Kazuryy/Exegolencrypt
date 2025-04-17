@@ -253,6 +253,7 @@ def selectionner_dossier(titre="Sélectionner un dossier"):
     """Ouvre une boîte de dialogue pour sélectionner un dossier et retourne son chemin"""
     root = tk.Tk()
     root.withdraw()  # Cacher la fenêtre principale
+    root.attributes('-topmost', True)  # Toujours au-dessus des autres fenêtres
     
     chemin_dossier = filedialog.askdirectory(
         title=titre
@@ -279,6 +280,7 @@ def dechiffrer_dossier_avec_dialogue():
     """Déchiffre un dossier avec des boîtes de dialogue"""
     root = tk.Tk()
     root.withdraw()
+    root.attributes('-topmost', True)
     
     # Laisser l'utilisateur sélectionner n'importe quel fichier
     fichier_source = filedialog.askopenfilename(
