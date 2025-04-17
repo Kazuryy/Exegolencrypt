@@ -3,7 +3,7 @@ from modules import prim, second
 def main():
     while True:
         try:
-            choice = int(input("Que souhaitez-vous faire ?\n1. Chiffrer mon message.\n2. Déchiffrer mon message.\nMon choix : "))
+            choice = int(input("Que souhaitez-vous faire ?\n1. Chiffrer.\n2. Déchiffrer.\nMon choix : "))
         except ValueError:
             print("\n❌  Veuillez entrer un chiffre valide.\n")
             continue
