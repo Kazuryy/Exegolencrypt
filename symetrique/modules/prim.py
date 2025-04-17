@@ -91,11 +91,16 @@ def chiffrer_text():
     except Exception as e:
         return f"Une erreur inattendue s'est produite : {e}"
 
-def chiffrer_dossier(chemin_dossier, cle):
-    """Chiffre un dossier entier en le compressant d'abord en ZIP"""
-    chemin_sortie = chemin_dossier + ".encrypted"
-    
+def chiffrer_dossier(chemin_dossier, cle, dossier_destination):
+    """Chiffre un dossier entier en le compressant d'abord en ZIP, avec gestion du chemin de sortie"""
     try:
+        # Générer un nom de fichier si le chemin donné est un dossier
+        if os.path.isdir(dossier_destination):
+            nom_dossier = os.path.basename(os.path.normpath(chemin_dossier))
+            chemin_sortie = os.path.join(dossier_destination, nom_dossier + ".encrypted")
+        else:
+            chemin_sortie = dossier_destination
+
         # Créer un fichier ZIP temporaire contenant tous les fichiers du dossier
         temp_zip = tempfile.mktemp(suffix='.zip')
         with zipfile.ZipFile(temp_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -104,26 +109,26 @@ def chiffrer_dossier(chemin_dossier, cle):
                     chemin_complet = os.path.join(root, file)
                     chemin_relatif = os.path.relpath(chemin_complet, os.path.dirname(chemin_dossier))
                     zipf.write(chemin_complet, chemin_relatif)
-        #print(f"Fichier ZIP temporaire créé : {temp_zip}")
-        
+
         # Lire le fichier ZIP en tant que données binaires
         with open(temp_zip, 'rb') as f:
             donnees_zip = f.read()
-        
+
         # Convertir les données binaires en chaîne hexadécimale
         donnees_hex = second.binary_to_hex_string(donnees_zip)
-        
+
         # Chiffrer la chaîne hexadécimale
         donnees_chiffrees = chiffrer(donnees_hex, cle)
-        
-        # Écrire le résultat
+
+        # Écrire le résultat dans le fichier de sortie
         with open(chemin_sortie, 'w', encoding='utf-8') as f:
             f.write(donnees_chiffrees)
-        
+
         # Supprimer le ZIP temporaire
         os.remove(temp_zip)
-        
+
         return chemin_sortie
+
     except Exception as e:
         return f"Erreur lors du chiffrement du dossier: {str(e)}"
 
@@ -267,11 +272,16 @@ def chiffrer_dossier_avec_dialogue():
     
     if not dossier_source:
         return "Aucun dossier sélectionné."
+
+    dossier_destination = selectionner_dossier("Sélectionner où extraire le dossier déchiffré")
+    
+    if not dossier_destination:
+        return "Aucun dossier de destination sélectionné."
     
     cle = second.demand_key()
     
     try:
-        chemin_resultat = chiffrer_dossier(dossier_source, cle)
+        chemin_resultat = chiffrer_dossier(dossier_source, cle, dossier_destination)
         return f"✅  Dossier chiffré enregistré sous: {chemin_resultat}"
     except Exception as e:
         return f"Erreur lors du chiffrement: {str(e)}"
