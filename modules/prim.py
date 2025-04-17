@@ -111,12 +111,10 @@ def chiffrer_dossier(chemin_dossier, cle):
             donnees_zip = f.read()
         
         # Convertir les données binaires en chaîne hexadécimale
-        print("temp")
         donnees_hex = second.binary_to_hex_string(donnees_zip)
         
         # Chiffrer la chaîne hexadécimale
         donnees_chiffrees = chiffrer(donnees_hex, cle)
-        print("\nzebi2", donnees_chiffrees)
         
         # Écrire le résultat
         with open(chemin_sortie, 'w', encoding='utf-8') as f:
