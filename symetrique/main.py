@@ -27,6 +27,8 @@ def main():
                     resultat = prim.chiffrer_dossier_avec_dialogue()
                     print(resultat)
                     return
+                else:
+                    print("\n❌  Veuillez entrer un chiffre valide.\n")
         elif choice == 2:
             while True:
                 try:
@@ -48,5 +50,9 @@ def main():
                     resultat = prim.dechiffrer_dossier_avec_dialogue()
                     print(resultat)
                     return
+                else:
+                    print("\n❌  Veuillez entrer un chiffre valide.\n")
+        else:
+            print("\n❌  Veuillez entrer un chiffre valide.\n")
 
 main()
