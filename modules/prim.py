@@ -104,7 +104,7 @@ def chiffrer_dossier(chemin_dossier, cle):
                     chemin_complet = os.path.join(root, file)
                     chemin_relatif = os.path.relpath(chemin_complet, os.path.dirname(chemin_dossier))
                     zipf.write(chemin_complet, chemin_relatif)
-        print(f"Fichier ZIP temporaire créé : {temp_zip}")
+        #print(f"Fichier ZIP temporaire créé : {temp_zip}")
         
         # Lire le fichier ZIP en tant que données binaires
         with open(temp_zip, 'rb') as f:

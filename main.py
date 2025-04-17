@@ -28,6 +28,7 @@ def main():
                 elif choice2 == 3:
                     # Utiliser la fonction avec dialogue pour plus de clarté
                     resultat = prim.chiffrer_dossier_avec_dialogue()
+                    print(resultat)
                     return
         elif choice == 2:
             while True:
