@@ -45,10 +45,6 @@ def demand_key():
         except ValueError:
             print("❌ La clé doit contenir deux entiers.")
 
-def demand_username():
-    username = input("\nQui êtes-vous ? (nom d'utilisateur) : ")
-    return username.strip()
-
 def demand_symmetric_key():
     while True:
         key = input("\nEntrez votre clé de protection (pour le chiffrement symétrique) : ")
@@ -145,6 +141,50 @@ def get_user_keys(username):
     users_keys = load_user_keys()
     return users_keys.get(username, None)
 
+def list_users():
+    """Liste tous les utilisateurs enregistrés"""
+    users_keys = load_user_keys()
+    
+    if not users_keys:
+        print("\n📝 Aucun utilisateur enregistré.")
+        return []
+    
+    print("\n📝 Liste des utilisateurs enregistrés:")
+    users = list(users_keys.keys())
+    for i, username in enumerate(users, 1):
+        print(f"{i}. {username}")
+    
+    return users
+
+def select_user_from_list():
+    """Demande à l'utilisateur de sélectionner un utilisateur dans la liste"""
+    users = list_users()
+    
+    if not users:
+        return None
+    
+    while True:
+        try:
+            choice = input("\nSélectionnez un utilisateur (numéro) ou entrez un nouveau nom: ")
+            
+            # Vérifier si l'entrée est un numéro
+            try:
+                idx = int(choice) - 1
+                if 0 <= idx < len(users):
+                    return users[idx]
+                else:
+                    print("❌ Numéro invalide.")
+                    continue
+            except ValueError:
+                # L'entrée n'est pas un numéro, on la considère comme un nouveau nom
+                if choice.strip():
+                    return choice.strip()
+                else:
+                    print("❌ Veuillez entrer un nom valide.")
+        
+        except KeyboardInterrupt:
+            return None
+
 def get_decrypted_private_key(username, sym_key):
     """Récupère et déchiffre la clé privée d'un utilisateur"""
     user_data = get_user_keys(username)
@@ -158,7 +198,7 @@ def get_decrypted_private_key(username, sym_key):
     try:
         # Déchiffrer la représentation JSON de la clé privée
         decrypted_json = sym_prim.dechiffrer(encrypted_private_key, sym_key)
-        if decrypted_json.startswith("Erreur"):
+        if isinstance(decrypted_json, str) and decrypted_json.startswith("Erreur"):
             print(f"❌ {decrypted_json}")
             return None
             
@@ -174,8 +214,21 @@ def get_decrypted_private_key(username, sym_key):
         print(f"❌ Erreur lors du déchiffrement de la clé privée: {str(e)}")
         return None
 
-def register_new_user(username):
+def register_new_user():
     """Enregistre un nouvel utilisateur avec ses clés"""
+    # Demander le nom d'utilisateur
+    while True:
+        username = input("\nNom d'utilisateur : ").strip()
+        if not username:
+            print("❌ Le nom d'utilisateur ne peut pas être vide.")
+            continue
+        
+        if user_exists(username):
+            print(f"❌ L'utilisateur {username} existe déjà.")
+            continue
+        
+        break
+    
     print(f"\n🔐 Génération des clés pour {username}...")
     public_key, private_key = generate_keys()
     
@@ -201,7 +254,7 @@ def register_new_user(username):
     print(f"⚠️ Votre clé privée est protégée par chiffrement symétrique.")
     print(f"⚠️ N'oubliez pas votre clé de protection symétrique!")
     
-    return public_key
+    return username
 
 # --------------------------
 #  Génération de clés RSA
@@ -440,36 +493,68 @@ def decrypt(cipher_b64, private_key, iv):
 #  Fonctions d'interface utilisateur
 # --------------------------
 
-def asymmetric_encryption_menu(username):
+def asymmetric_encryption_menu():
     """Menu pour le chiffrement asymétrique"""
     while True:
         try:
-            choice = int(input("\nQue souhaitez-vous faire ?\n1. 🔐 Chiffrer un message\n2. 🔓 Déchiffrer un message\n3. 🔙 Retour\nMon choix : "))
+            print("\nQue souhaitez-vous faire ?")
+            print("1. 🔒 Chiffrer un message")
+            print("2. 🔓 Déchiffrer un message")
+            print("3. 👤 Créer un nouvel utilisateur")
+            print("4. 🔙 Retour")
             
-            if choice == 1:
-                encrypt_message_for_user(username)
-            elif choice == 2:
-                decrypt_message_for_user(username)
-            elif choice == 3:
+            choice = input("\nMon choix : ")
+            
+            if choice == "1":
+                encrypt_message()
+            elif choice == "2":
+                decrypt_message()
+            elif choice == "3":
+                register_new_user()
+            elif choice == "4":
                 return
             else:
                 print("❌ Veuillez entrer un choix valide.")
-        except ValueError:
-            print("❌ Veuillez entrer un chiffre valide.")
+        except KeyboardInterrupt:
+            print("\n\n👋 Action interrompue.")
+            return
+        except Exception as e:
+            print(f"❌ Erreur: {str(e)}")
 
-def encrypt_message_for_user(recipient_username):
+def encrypt_message():
     """Chiffrer un message avec la clé publique d'un utilisateur"""
-    # Demander le nom du destinataire
-    dest_username = input("\nPour qui est ce message? (nom d'utilisateur) : ")
+    print("\n🔒 Chiffrement de message")
+    print("Pour chiffrer un message, vous avez besoin de la clé publique du destinataire.")
     
-    # Vérifier si l'utilisateur existe
-    if not user_exists(dest_username):
-        print(f"❌ Utilisateur {dest_username} introuvable.")
+    # Demander avec quelle clé publique chiffrer
+    print("\nAvec la clé publique de qui voulez-vous chiffrer ce message?")
+    
+    # Liste les utilisateurs enregistrés
+    username = select_user_from_list()
+    
+    if not username:
+        print("❌ Opération annulée.")
         return
     
-    # Récupérer la clé publique du destinataire
-    user_data = get_user_keys(dest_username)
+    # Si l'utilisateur n'existe pas, proposer de le créer
+    if not user_exists(username):
+        print(f"\n❔ L'utilisateur {username} n'existe pas.")
+        create_new = input("Voulez-vous créer ce nouvel utilisateur? (o/n): ").lower()
+        
+        if create_new == 'o':
+            username = register_new_user()
+        else:
+            print("❌ Opération annulée.")
+            return
+    
+    # Récupérer la clé publique
+    user_data = get_user_keys(username)
+    if not user_data:
+        print("❌ Impossible de récupérer les informations de l'utilisateur.")
+        return
+    
     public_key = user_data["public_key"]
+    print(f"\n✅ Clé publique de {username} récupérée: {public_key}")
     
     # Demander le message à chiffrer
     message = demand_msg()
@@ -481,14 +566,29 @@ def encrypt_message_for_user(recipient_username):
     # Chiffrer le message
     try:
         cipher_b64 = encrypt(message, public_key, salt, iv)
-        print(f"🔒 Message chiffré pour {dest_username} : {cipher_b64}\n")
+        print(f"\n🔒 Message chiffré pour {username}: {cipher_b64}")
     except Exception as e:
-        print(f"❌ Erreur lors du chiffrement : {str(e)}")
+        print(f"❌ Erreur lors du chiffrement: {str(e)}")
 
-def decrypt_message_for_user(username):
-    """Déchiffrer un message avec la clé privée de l'utilisateur"""
-    # Demander le message chiffré
-    cipher_b64 = demand_cipher_b64()
+def decrypt_message():
+    """Déchiffrer un message avec la clé privée d'un utilisateur"""
+    print("\n🔓 Déchiffrement de message")
+    print("Pour déchiffrer un message, vous avez besoin de votre clé privée.")
+    
+    # Demander avec quelle clé privée déchiffrer
+    print("\nAvec la clé privée de qui voulez-vous déchiffrer ce message?")
+    
+    # Liste les utilisateurs enregistrés
+    username = select_user_from_list()
+    
+    if not username:
+        print("❌ Opération annulée.")
+        return
+    
+    # Si l'utilisateur n'existe pas, informer
+    if not user_exists(username):
+        print(f"\n❌ L'utilisateur {username} n'existe pas. Impossible de déchiffrer.")
+        return
     
     # Demander la clé symétrique pour déchiffrer la clé privée
     sym_key = demand_symmetric_key()
@@ -499,19 +599,22 @@ def decrypt_message_for_user(username):
     if not private_key:
         return
     
+    print(f"\n✅ Clé privée de {username} déchiffrée avec succès.")
+    
+    # Demander le message chiffré
+    cipher_b64 = demand_cipher_b64()
+    
     # Paramètres pour le déchiffrement
     iv = "4O6g9trUcd4C3DnQ"
     
     # Déchiffrer le message
     try:
         decrypted = decrypt(cipher_b64, private_key, iv)
-        print(f"🔓 Message déchiffré : {decrypted}\n")
+        print(f"\n🔓 Message déchiffré: {decrypted}")
     except ValueError as err:
-        print(f"⚠️ Erreur : {err}")
+        print(f"⚠️ Erreur: {err}")
     except Exception as e:
-        print(f"❌ Erreur lors du déchiffrement : {str(e)}")
-
-# Cette fonction a été retirée car le chiffrement symétrique est géré par master_main.py
+        print(f"❌ Erreur lors du déchiffrement: {str(e)}")
 
 # --------------------------
 #  Programme principal
@@ -520,26 +623,10 @@ def decrypt_message_for_user(username):
 def main():
     print("\n🔐 Programme de cryptographie asymétrique 🔑\n")
     
-    # Demander l'identité de l'utilisateur
-    username = demand_username()
+    # Menu principal - On passe directement à l'encryption asymétrique
+    asymmetric_encryption_menu()
     
-    # Vérifier si l'utilisateur existe déjà
-    if not user_exists(username):
-        print(f"\n👤 Bienvenue {username}, vous êtes un nouvel utilisateur.")
-        register_new_user(username)
-    else:
-        print(f"\n👋 Bon retour parmi nous, {username}!")
-    
-    # Menu principal
-    while True:
-        # Cryptographie asymétrique directement sans choix
-        asymmetric_encryption_menu(username)
-            
-        # Demander si l'utilisateur veut continuer
-        continue_choice = input("\nVoulez-vous continuer? (o/n): ").lower()
-        if continue_choice != 'o':
-            print("\n👋 Merci d'avoir utilisé notre programme de cryptographie. À bientôt!")
-            break
+    print("\n👋 Merci d'avoir utilisé notre programme de cryptographie. À bientôt!")
 
 if __name__ == "__main__":
     main()
