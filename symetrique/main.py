@@ -23,7 +23,7 @@ def print_header():
     """Affiche un en-tête stylisé"""
     clear_screen()
     print(f"{Colors.HEADER}{Colors.BOLD}{'=' * 70}{Colors.ENDC}")
-    print(f"{Colors.HEADER}{Colors.BOLD}{'MULTICRYPT - CHIFFREMENT SYMÉTRIQUE'.center(70)}{Colors.ENDC}")
+    print(f"{Colors.HEADER}{Colors.BOLD}{'EXEGOLENCRYPT - CHIFFREMENT SYMÉTRIQUE'.center(70)}{Colors.ENDC}")
     print(f"{Colors.HEADER}{Colors.BOLD}{'=' * 70}{Colors.ENDC}")
     print()
 
@@ -184,7 +184,7 @@ def main():
     clear_screen()
     
     while True:
-        print(f"\n{Colors.BOLD}{Colors.YELLOW}🔐 BIENVENUE DANS MULTICRYPT 🔑{Colors.ENDC}")
+        print(f"\n{Colors.BOLD}{Colors.YELLOW}🔐 BIENVENUE DANS EXEGOLENCRYPT 🔑{Colors.ENDC}")
         print(f"{Colors.CYAN}Le programme de chiffrement symétrique sécurisé{Colors.ENDC}\n")
         
         print_menu("QUE SOUHAITEZ-VOUS FAIRE ?", [
@@ -230,7 +230,7 @@ def main():
                 decrypt_folder()
             
         elif choice == 3:
-            print(f"\n{Colors.GREEN}Merci d'avoir utilisé MultiCrypt !{Colors.ENDC}")
+            print(f"\n{Colors.GREEN}Merci d'avoir utilisé Exegolencrypt !{Colors.ENDC}")
             print(f"{Colors.YELLOW}À bientôt !{Colors.ENDC}\n")
             break
         
