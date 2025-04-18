@@ -265,15 +265,13 @@ def generate_keys(key_size=1024):
     Génère une paire de clés RSA de taille spécifiée de manière optimisée.
     
     Args:
-        key_size (int): Taille approximative de la clé en bits (par défaut 1024)
+        key_size (int): Taille approximative de la clé en bits
     
     Returns:
         tuple: ((e, n), (d, n)) - clé publique et clé privée
     """
     # Taille des nombres premiers (la moitié de la taille de la clé)
     bit_size = key_size // 2
-    
-    print(f"⏳ Génération de nombres premiers ({bit_size} bits)...")
     
     # Générer deux nombres premiers distincts
     p = generate_prime(bit_size)
@@ -282,8 +280,6 @@ def generate_keys(key_size=1024):
     # S'assurer que p et q sont distincts
     while p == q:
         q = generate_prime(bit_size)
-    
-    print("✅ Nombres premiers générés!")
     
     # Calculer n et phi(n)
     n = p * q
