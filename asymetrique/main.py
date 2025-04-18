@@ -260,12 +260,12 @@ def register_new_user():
 #  Génération de clés RSA
 # --------------------------
 
-def generate_keys(key_size=512):
+def generate_keys(key_size=1024):
     """
     Génère une paire de clés RSA de taille spécifiée de manière optimisée.
     
     Args:
-        key_size (int): Taille approximative de la clé en bits (par défaut 512)
+        key_size (int): Taille approximative de la clé en bits (par défaut 1024)
     
     Returns:
         tuple: ((e, n), (d, n)) - clé publique et clé privée

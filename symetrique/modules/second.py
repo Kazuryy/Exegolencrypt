@@ -1,26 +1,55 @@
 # Fonctions de chiffrement et déchiffrement
 
+# Couleurs ANSI pour terminal
+class Colors:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 # Principal
 
 def demand_msg_key():
+    """Interface améliorée pour demander un message et une clé"""
+    print(f"\n{Colors.CYAN}{'─' * 50}{Colors.ENDC}")
+    print(f"{Colors.BOLD}SAISIE DU MESSAGE ET DE LA CLÉ{Colors.ENDC}")
+    print(f"{Colors.CYAN}{'─' * 50}{Colors.ENDC}")
+    
     while True:
-        message = input("\nQuel est votre message ?\nMon message : ")
+        message = input(f"\n{Colors.YELLOW}➤ Saisissez votre message :{Colors.ENDC}\n")
         if not message:
-            print("❌  Le message ne peut pas être vide.")
+            print(f"{Colors.RED}❌  Le message ne peut pas être vide.{Colors.ENDC}")
             continue
+        
+        print(f"\n{Colors.CYAN}{'─' * 50}{Colors.ENDC}")
+        
         while True:
-            key = input("\nQuelle est votre clé de chiffrement ?\nMa clé : ")
+            key = input(f"\n{Colors.YELLOW}➤ Saisissez votre clé de chiffrement :{Colors.ENDC}\n")
             if not key:
-                print("❌  La clé ne peut pas être vide.")
+                print(f"{Colors.RED}❌  La clé ne peut pas être vide.{Colors.ENDC}")
                 continue
+            
+            print(f"\n{Colors.GREEN}✓ Message et clé enregistrés.{Colors.ENDC}")
             return message, key
 
 def demand_key():
+    """Interface améliorée pour demander une clé"""
+    print(f"\n{Colors.CYAN}{'─' * 50}{Colors.ENDC}")
+    print(f"{Colors.BOLD}SAISIE DE LA CLÉ{Colors.ENDC}")
+    print(f"{Colors.CYAN}{'─' * 50}{Colors.ENDC}")
+    
     while True:
-        key = input("\nQuelle est votre clé de chiffrement ?\nMa clé : ")
+        key = input(f"\n{Colors.YELLOW}➤ Saisissez votre clé de chiffrement :{Colors.ENDC}\n")
         if not key:
-            print("❌  La clé ne peut pas être vide.")
+            print(f"{Colors.RED}❌  La clé ne peut pas être vide.{Colors.ENDC}")
             continue
+        
+        print(f"\n{Colors.GREEN}✓ Clé enregistrée.{Colors.ENDC}")
         return key
 
 
