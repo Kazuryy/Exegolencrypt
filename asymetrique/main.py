@@ -7,8 +7,8 @@ import json
 import os
 import sys
 
-
 # Ajout du chemin pour pouvoir importer les modules de chiffrement symétrique
+# Nous avons besoin de garder cet import pour le chiffrement des clés privées
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from symetrique.modules import prim as sym_prim
 
@@ -44,6 +44,7 @@ def demand_key():
             return (e_or_d, n)
         except ValueError:
             print("❌ La clé doit contenir deux entiers.")
+
 def demand_username():
     username = input("\nQui êtes-vous ? (nom d'utilisateur) : ")
     return username.strip()
@@ -65,7 +66,7 @@ def demand_cipher_b64():
         return msg
 
 def gcd(a, b):
-    """PGCD avec l’algorithme d’Euclide."""
+    """PGCD avec l'algorithme d'Euclide."""
     while b != 0:
         a, b = b, a % b
     return a
@@ -95,7 +96,7 @@ def simple_hash(message):
     return hashlib.sha256(message.encode('utf-8')).hexdigest()
 
 # --------------------------
-#  Génération de clés RSA
+#  Gestion des utilisateurs et clés
 # --------------------------
 
 def get_keys_path():
@@ -160,7 +161,7 @@ def get_decrypted_private_key(username, sym_key):
     except Exception as e:
         print(f"❌ Erreur lors du déchiffrement de la clé privée: {str(e)}")
         return None
-    
+
 def register_new_user(username):
     """Enregistre un nouvel utilisateur avec ses clés"""
     print(f"\n🔐 Génération des clés pour {username}...")
@@ -189,26 +190,102 @@ def register_new_user(username):
     print(f"⚠️ N'oubliez pas votre clé de protection symétrique!")
     
     return public_key
-def generate_keys(low=1000, high=5000):
-    """
-    - Choisit deux nombres premiers p, q dans [low, high].
-    - Calcule n = p*q et phi(n) = (p-1)*(q-1).
-    - Choisit e premier avec phi(n) et calcule d.
-    """
-    p = random.randint(low, high)
-    while not is_prime(p):
-        p = random.randint(low, high)
-    q = random.randint(low, high)
-    while not is_prime(q):
-        q = random.randint(low, high)
 
+# --------------------------
+#  Génération de clés RSA
+# --------------------------
+
+def generate_keys(key_size=1024):
+    """
+    Génère une paire de clés RSA de taille spécifiée.
+    
+    Args:
+        key_size (int): Taille approximative de la clé en bits (par défaut 1024)
+    
+    Returns:
+        tuple: ((e, n), (d, n)) - clé publique et clé privée
+    """
+    # Déterminer la taille approximative de p et q
+    # Pour une clé de n bits, p et q doivent être d'environ n/2 bits
+    bit_size = key_size // 2
+    
+    # Calculer les limites approximatives pour p et q
+    # 2^(bit_size-1) à 2^bit_size - 1
+    low = 2 ** (bit_size - 1)
+    high = 2 ** bit_size - 1
+    
+    print(f"⏳ Génération de nombres premiers ({bit_size} bits)... Cela peut prendre un moment.")
+    
+    # Générer p
+    p = random.randint(low, high)
+    # Pour un test de primalité plus efficace sur de grands nombres, 
+    # nous utilisons un test probabiliste (Miller-Rabin)
+    while not isProbablePrime(p):
+        p = random.randint(low, high)
+    
+    # Générer q (différent de p)
+    q = random.randint(low, high)
+    while not isProbablePrime(q) or q == p:
+        q = random.randint(low, high)
+        
+    print("✅ Nombres premiers générés!")
+    
     n = p * q
     phi_n = (p - 1) * (q - 1)
-    e = random.randint(2, phi_n - 1)
-    while gcd(e, phi_n) != 1:
-        e = random.randint(2, phi_n - 1)
+    
+    # Une valeur e commune est 65537 (0x10001), qui est un nombre premier
+    # avec des caractéristiques pratiques pour le chiffrement RSA
+    e = 65537
+    
+    # Vérifier que e est premier avec phi_n
+    if gcd(e, phi_n) != 1:
+        # Si ce n'est pas le cas (rare), on en cherche un autre
+        e = random.randint(3, phi_n - 1)
+        while gcd(e, phi_n) != 1:
+            e = random.randint(3, phi_n - 1)
+    
+    # Calculer d, l'inverse modulaire de e mod phi_n
     d = modinv(e, phi_n)
+    
     return (e, n), (d, n)
+
+def isProbablePrime(n, k=5):
+    """
+    Test de primalité Miller-Rabin.
+    
+    Args:
+        n (int): Nombre à tester
+        k (int): Nombre d'itérations (plus k est grand, plus le test est précis)
+    
+    Returns:
+        bool: True si n est probablement premier, False sinon
+    """
+    if n <= 1:
+        return False
+    if n <= 3:
+        return True
+    if n % 2 == 0:
+        return False
+    
+    # Écrire n-1 sous la forme 2^r * d
+    r, d = 0, n - 1
+    while d % 2 == 0:
+        r += 1
+        d //= 2
+    
+    # Témoin de primalité
+    for _ in range(k):
+        a = random.randint(2, n - 2)
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        for _ in range(r - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                break
+        else:
+            return False
+    return True
 
 # --------------------------
 #  Chiffrement / Déchiffrement
@@ -254,7 +331,10 @@ def decrypt(cipher_b64, private_key, iv):
     block_size = math.ceil(n.bit_length() / 8)
 
     # 1. Base64 → bytes chiffrés
-    cipher_bytes = base64.b64decode(cipher_b64)
+    try:
+        cipher_bytes = base64.b64decode(cipher_b64)
+    except Exception:
+        raise ValueError("Erreur de décodage Base64 : message corrompu")
 
     # 2. Découpe en blocs et déchiffrement RSA
     plain_bytes = bytearray()
@@ -269,29 +349,21 @@ def decrypt(cipher_b64, private_key, iv):
     try:
         full = base64.b64decode(bytes(plain_bytes)).decode('utf-8')
     except Exception:
-        raise ValueError("Erreur de décodage Base64 : message corrompu")
+        raise ValueError("Erreur de décodage Base64 : message corrompu")
 
     # 4. Retrait IV et sel
     if not full.startswith(iv):
-        raise ValueError("IV invalide !")
+        raise ValueError("IV invalide !")
     salted = full[len(iv):]
     original = ''.join(salted[i] for i in range(0, len(salted), 2))
 
-    # Vérification d’intégrité (optionnelle)
+    # Vérification d'intégrité (optionnelle)
     # if simple_hash(original) != simple_hash(original): ...
     return original
 
-
-def choose_cryptography_type():
-    """Choix entre chiffrement asymétrique et symétrique"""
-    while True:
-        try:
-            choice = int(input("\nQuel type de cryptographie souhaitez-vous utiliser?\n1. 🔐 Asymétrique (RSA)\n2. 🔑 Symétrique\nMon choix : "))
-            if choice in [1, 2]:
-                return choice
-        except ValueError:
-            pass
-        print("❌ Veuillez entrer un choix valide.")
+# --------------------------
+#  Fonctions d'interface utilisateur
+# --------------------------
 
 def asymmetric_encryption_menu(username):
     """Menu pour le chiffrement asymétrique"""
@@ -364,44 +436,14 @@ def decrypt_message_for_user(username):
     except Exception as e:
         print(f"❌ Erreur lors du déchiffrement : {str(e)}")
 
-def run_symmetric_crypto():
-    """Lance le programme de chiffrement symétrique"""
-    print("\n🔄 Lancement du programme de chiffrement symétrique...")
-    
-    # Chemin vers le script principal du chiffrement symétrique
-    sym_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "symetrique", "main.py")
-    
-    # Vérifier si le fichier existe
-    if not os.path.exists(sym_path):
-        print(f"❌ Erreur: Le fichier {sym_path} n'a pas été trouvé.")
-        return
-    
-    # Exécuter le script
-    try:
-        # Sauvegarder l'état actuel
-        old_argv = sys.argv.copy()
-        old_path = sys.path.copy()
-        
-        # Configurer pour l'exécution
-        sys.path.append(os.path.dirname(sym_path))
-        os.chdir(os.path.dirname(sym_path))
-        
-        # Exécuter le script
-        with open(sym_path, 'r') as f:
-            exec(f.read())
-        
-        # Restaurer l'état
-        sys.argv = old_argv
-        sys.path = old_path
-    except Exception as e:
-        print(f"❌ Erreur lors de l'exécution du programme symétrique: {str(e)}")
+# Cette fonction a été retirée car le chiffrement symétrique est géré par master_main.py
 
 # --------------------------
 #  Programme principal
 # --------------------------
 
 def main():
-    print("\n🔐 Programme de cryptographie asymétrique et symétrique 🔑\n")
+    print("\n🔐 Programme de cryptographie asymétrique 🔑\n")
     
     # Demander l'identité de l'utilisateur
     username = demand_username()
@@ -415,15 +457,8 @@ def main():
     
     # Menu principal
     while True:
-        # Choisir le type de cryptographie
-        crypto_type = choose_cryptography_type()
-        
-        if crypto_type == 1:
-            # Cryptographie asymétrique
-            asymmetric_encryption_menu(username)
-        else:
-            # Cryptographie symétrique
-            run_symmetric_crypto()
+        # Cryptographie asymétrique directement sans choix
+        asymmetric_encryption_menu(username)
             
         # Demander si l'utilisateur veut continuer
         continue_choice = input("\nVoulez-vous continuer? (o/n): ").lower()
