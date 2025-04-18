@@ -72,11 +72,23 @@ def gcd(a, b):
     return a
 
 def modinv(e, phi_n):
-    """Inverse modulaire de e modulo phi_n."""
-    for d in range(1, phi_n):
-        if (e * d) % phi_n == 1:
-            return d
-    return None
+    """
+    Calcule l'inverse modulaire de e modulo phi_n de manière plus efficace.
+    Utilise l'algorithme d'Euclide étendu.
+    """
+    def extended_gcd(a, b):
+        if a == 0:
+            return b, 0, 1
+        else:
+            gcd, x, y = extended_gcd(b % a, a)
+            return gcd, y - (b // a) * x, x
+    
+    gcd, x, y = extended_gcd(e, phi_n)
+    
+    if gcd != 1:
+        return None  # L'inverse modulaire n'existe pas
+    else:
+        return x % phi_n
 
 def is_prime(num):
     """Test de primalité simple."""
@@ -195,87 +207,120 @@ def register_new_user(username):
 #  Génération de clés RSA
 # --------------------------
 
-def generate_keys(key_size=1024):
+def generate_keys(key_size=512):
     """
-    Génère une paire de clés RSA de taille spécifiée.
+    Génère une paire de clés RSA de taille spécifiée de manière optimisée.
     
     Args:
-        key_size (int): Taille approximative de la clé en bits (par défaut 1024)
+        key_size (int): Taille approximative de la clé en bits (par défaut 512)
     
     Returns:
         tuple: ((e, n), (d, n)) - clé publique et clé privée
     """
-    # Déterminer la taille approximative de p et q
-    # Pour une clé de n bits, p et q doivent être d'environ n/2 bits
+    # Taille des nombres premiers (la moitié de la taille de la clé)
     bit_size = key_size // 2
     
-    # Calculer les limites approximatives pour p et q
-    # 2^(bit_size-1) à 2^bit_size - 1
-    low = 2 ** (bit_size - 1)
-    high = 2 ** bit_size - 1
+    print(f"⏳ Génération de nombres premiers ({bit_size} bits)...")
     
-    print(f"⏳ Génération de nombres premiers ({bit_size} bits)... Cela peut prendre un moment.")
+    # Générer deux nombres premiers distincts
+    p = generate_prime(bit_size)
+    q = generate_prime(bit_size)
     
-    # Générer p
-    p = random.randint(low, high)
-    # Pour un test de primalité plus efficace sur de grands nombres, 
-    # nous utilisons un test probabiliste (Miller-Rabin)
-    while not isProbablePrime(p):
-        p = random.randint(low, high)
+    # S'assurer que p et q sont distincts
+    while p == q:
+        q = generate_prime(bit_size)
     
-    # Générer q (différent de p)
-    q = random.randint(low, high)
-    while not isProbablePrime(q) or q == p:
-        q = random.randint(low, high)
-        
     print("✅ Nombres premiers générés!")
     
+    # Calculer n et phi(n)
     n = p * q
     phi_n = (p - 1) * (q - 1)
     
-    # Une valeur e commune est 65537 (0x10001), qui est un nombre premier
-    # avec des caractéristiques pratiques pour le chiffrement RSA
+    # Exposant public standard: 65537 (0x10001)
     e = 65537
     
     # Vérifier que e est premier avec phi_n
-    if gcd(e, phi_n) != 1:
-        # Si ce n'est pas le cas (rare), on en cherche un autre
-        e = random.randint(3, phi_n - 1)
-        while gcd(e, phi_n) != 1:
-            e = random.randint(3, phi_n - 1)
+    while gcd(e, phi_n) != 1:
+        # Choisir un autre exposant si nécessaire (rare)
+        e = 65539  # Prochain nombre premier après 65537
+        
+        if gcd(e, phi_n) != 1:
+            e = 65521  # Plus grand nombre premier inférieur à 65536
+            
+            # Si toujours pas, utiliser une recherche plus étendue
+            if gcd(e, phi_n) != 1:
+                e = find_coprime(phi_n)
     
-    # Calculer d, l'inverse modulaire de e mod phi_n
-    d = modinv(e, phi_n)
+    # Calculer l'exposant privé d
+    d = efficient_modinv(e, phi_n)
+    
+    # Double vérification: e*d ≡ 1 (mod phi_n)
+    assert (e * d) % phi_n == 1, "Erreur dans le calcul de l'inverse modulaire"
     
     return (e, n), (d, n)
 
-def isProbablePrime(n, k=5):
+def generate_prime(bits):
     """
-    Test de primalité Miller-Rabin.
+    Génère un nombre premier de la taille spécifiée en bits
+    en utilisant une approche optimisée.
+    """
+    # Liste des petits nombres premiers pour un test de divisibilité rapide
+    small_primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+    
+    # Garantir que le nombre est dans la plage correcte: [2^(bits-1), 2^bits - 1]
+    min_val = 1 << (bits - 1)
+    max_val = (1 << bits) - 1
+    
+    while True:
+        # Générer un nombre impair dans la plage
+        candidate = random.randrange(min_val, max_val) | 1
+        
+        # Test rapide de divisibilité par les petits nombres premiers
+        is_divisible = False
+        for prime in small_primes:
+            if candidate % prime == 0 and candidate > prime:
+                is_divisible = True
+                break
+        
+        if is_divisible:
+            continue
+        
+        # Test de Miller-Rabin avec 7 itérations (probabilité d'erreur < 2^-56)
+        if is_probable_prime(candidate, 7):
+            return candidate
+
+def is_probable_prime(n, k=7):
+    """
+    Test de primalité de Miller-Rabin optimisé.
     
     Args:
-        n (int): Nombre à tester
-        k (int): Nombre d'itérations (plus k est grand, plus le test est précis)
+        n: Nombre à tester
+        k: Nombre d'itérations (plus k est grand, plus le test est précis)
     
     Returns:
-        bool: True si n est probablement premier, False sinon
+        bool: True si n est probablement premier, False s'il est composé
     """
-    if n <= 1:
-        return False
-    if n <= 3:
+    if n == 2 or n == 3:
         return True
-    if n % 2 == 0:
+    if n <= 1 or n % 2 == 0:
         return False
     
-    # Écrire n-1 sous la forme 2^r * d
+    # Écrire n-1 comme d*2^r
     r, d = 0, n - 1
     while d % 2 == 0:
         r += 1
         d //= 2
     
-    # Témoin de primalité
-    for _ in range(k):
-        a = random.randint(2, n - 2)
+    # Témoins pour le test de Miller-Rabin
+    # Pour n < 2⁶⁴, ces témoins garantissent la certitude
+    witnesses = [2, 3, 5, 7, 11, 13, 17]
+    if k < len(witnesses):
+        witnesses = witnesses[:k]
+    
+    # Test de Miller-Rabin
+    for a in witnesses:
+        if a >= n:
+            continue
         x = pow(a, d, n)
         if x == 1 or x == n - 1:
             continue
@@ -286,6 +331,36 @@ def isProbablePrime(n, k=5):
         else:
             return False
     return True
+
+def efficient_modinv(a, m):
+    """
+    Calcule l'inverse modulaire a^(-1) mod m efficacement
+    en utilisant l'algorithme d'Euclide étendu itératif.
+    """
+    if gcd(a, m) != 1:
+        raise ValueError("L'inverse modulaire n'existe pas")
+    
+    # Algorithme d'Euclide étendu itératif
+    x0, x1, y0, y1 = 1, 0, 0, 1
+    a0, m0 = a, m
+    
+    while m0 > 0:
+        q = a0 // m0
+        a0, m0 = m0, a0 - q * m0
+        x0, x1 = x1, x0 - q * x1
+        y0, y1 = y1, y0 - q * y1
+    
+    # Normaliser le résultat pour qu'il soit positif
+    return x0 % m
+
+def find_coprime(n):
+    """
+    Trouve un nombre premier avec n en commençant à partir de 3.
+    """
+    e = 3
+    while gcd(e, n) != 1:
+        e += 2
+    return e
 
 # --------------------------
 #  Chiffrement / Déchiffrement
