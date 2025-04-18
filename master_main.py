@@ -70,61 +70,83 @@ def execute_symmetrique():
     """Exécute le module de chiffrement symétrique"""
     print("\n🔄 Chargement du module de chiffrement symétrique...")
     
-    # Chemin vers le module symétrique
-    sym_path = get_module_path("symetrique")
+    # Base directory où se trouve master_main.py
+    base_dir = os.path.dirname(os.path.abspath(__file__))
     
-    # Charger et exécuter le module
-    sym_module = load_module(sym_path, "sym_module")
-    if sym_module and hasattr(sym_module, "main"):
-        try:
-            # Sauvegarder l'état actuel
-            old_argv = sys.argv.copy()
-            old_path = sys.path.copy()
-            
-            # Configurer pour l'exécution
-            sys.path.append(os.path.dirname(sym_path))
-            os.chdir(os.path.dirname(sym_path))
-            
-            # Exécuter le module
+    # S'assurer que le répertoire symetrique est dans le chemin Python
+    sym_dir = os.path.join(base_dir, "symetrique")
+    if sym_dir not in sys.path:
+        sys.path.insert(0, sym_dir)
+    
+    # Chemin complet vers le répertoire modules
+    modules_dir = os.path.join(sym_dir, "modules")
+    if modules_dir not in sys.path:
+        sys.path.insert(0, modules_dir)
+    
+    # Chemin vers le module symétrique main.py
+    sym_path = os.path.join(sym_dir, "main.py")
+    
+    # Sauvegarder l'état actuel
+    old_cwd = os.getcwd()
+    old_path = sys.path.copy()
+    
+    try:
+        # Changer le répertoire de travail pour faciliter les imports relatifs
+        os.chdir(sym_dir)
+        
+        # Essayer de charger et exécuter le module
+        sym_module = load_module(sym_path, "sym_module")
+        if sym_module and hasattr(sym_module, "main"):
             sym_module.main()
-            
-            # Restaurer l'état
-            sys.argv = old_argv
-            sys.path = old_path
-        except Exception as e:
-            print_error(f"Erreur lors de l'exécution du module symétrique: {str(e)}")
-    else:
-        print_error("Le module symétrique n'a pas pu être chargé correctement.")
+        else:
+            print_error("Le module symétrique n'a pas pu être chargé correctement.")
+    except Exception as e:
+        print_error(f"Erreur lors de l'exécution du module symétrique: {str(e)}")
+    finally:
+        # Restaurer l'état
+        os.chdir(old_cwd)
+        sys.path = old_path
 
 def execute_asymetrique():
     """Exécute le module de chiffrement asymétrique"""
     print("\n🔄 Chargement du module de chiffrement asymétrique...")
     
-    # Chemin vers le module asymétrique
-    asym_path = get_module_path("asymetrique")
+    # Base directory où se trouve master_main.py
+    base_dir = os.path.dirname(os.path.abspath(__file__))
     
-    # Charger et exécuter le module
-    asym_module = load_module(asym_path, "asym_module")
-    if asym_module and hasattr(asym_module, "main"):
-        try:
-            # Sauvegarder l'état actuel
-            old_argv = sys.argv.copy()
-            old_path = sys.path.copy()
-            
-            # Configurer pour l'exécution
-            sys.path.append(os.path.dirname(asym_path))
-            os.chdir(os.path.dirname(asym_path))
-            
-            # Exécuter le module
+    # Chemin vers le répertoire asymétrique
+    asym_dir = os.path.join(base_dir, "asymetrique")
+    
+    # Chemin vers le module asymétrique main.py
+    asym_path = os.path.join(asym_dir, "main.py")
+    
+    # Sauvegarder l'état actuel
+    old_cwd = os.getcwd()
+    old_path = sys.path.copy()
+    
+    try:
+        # S'assurer que les chemins nécessaires sont dans sys.path
+        if base_dir not in sys.path:
+            sys.path.insert(0, base_dir)
+        
+        if asym_dir not in sys.path:
+            sys.path.insert(0, asym_dir)
+        
+        # Changer le répertoire de travail pour faciliter les imports
+        os.chdir(asym_dir)
+        
+        # Charger et exécuter le module
+        asym_module = load_module(asym_path, "asym_module")
+        if asym_module and hasattr(asym_module, "main"):
             asym_module.main()
-            
-            # Restaurer l'état
-            sys.argv = old_argv
-            sys.path = old_path
-        except Exception as e:
-            print_error(f"Erreur lors de l'exécution du module asymétrique: {str(e)}")
-    else:
-        print_error("Le module asymétrique n'a pas pu être chargé correctement.")
+        else:
+            print_error("Le module asymétrique n'a pas pu être chargé correctement.")
+    except Exception as e:
+        print_error(f"Erreur lors de l'exécution du module asymétrique: {str(e)}")
+    finally:
+        # Restaurer l'état
+        os.chdir(old_cwd)
+        sys.path = old_path
 
 def main():
     """Fonction principale"""
