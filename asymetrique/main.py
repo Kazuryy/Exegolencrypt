@@ -523,7 +523,7 @@ def encrypt_message():
     print("Pour chiffrer un message, vous avez besoin de la clé publique du destinataire.")
     
     # Demander avec quelle clé publique chiffrer
-    print("\nAvec la clé publique de qui voulez-vous chiffrer ce message?")
+    print("\nÀ qui voulez-vous envoyer un message ? ")
     
     # Liste les utilisateurs enregistrés
     username = select_user_from_list()
@@ -569,10 +569,10 @@ def encrypt_message():
 def decrypt_message():
     """Déchiffrer un message avec la clé privée d'un utilisateur"""
     print("\n🔓 Déchiffrement de message")
-    print("Pour déchiffrer un message, vous avez besoin de votre clé privée.")
+    print("Pour déchiffrer un message, vous avez besoin de la clé privée du destinataire du message.")
     
     # Demander avec quelle clé privée déchiffrer
-    print("\nAvec la clé privée de qui voulez-vous déchiffrer ce message?")
+    print("\nQui est le destinataire du message ? ")
     
     # Liste les utilisateurs enregistrés
     username = select_user_from_list()

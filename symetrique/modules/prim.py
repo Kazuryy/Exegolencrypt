@@ -302,7 +302,7 @@ def dechiffrer_dossier_avec_dialogue():
         return "Aucun fichier sélectionné."
     
     # Vérifier manuellement l'extension après la sélection
-    if not fichier_source.endswith(".encrypted"):
+    if not fichier_source.endswith(".exegolencrypt"):
         return f"❌ Erreur: Le fichier sélectionné n'est pas un fichier .encrypted. Veuillez sélectionner un fichier chiffré valide."
     
     dossier_destination = selectionner_dossier("Sélectionner où extraire le dossier déchiffré")
