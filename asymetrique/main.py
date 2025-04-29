@@ -696,20 +696,15 @@ def decrypt_message():
     print(f"\n✅ Clé privée de {username} déchiffrée avec succès.")
     
     # Demander le message chiffré - avec option de charger depuis un fichier
-    print("\nComment souhaitez-vous entrer le message chiffré?\n")
-    print("1. Saisir le message chiffré directement")
-    print("2. Charger le message chiffré depuis un fichier")
+    print("\nCharger le message chiffré depuis un fichier\n")
     
     input_choice = input("\nVotre choix: ")
     
-    if input_choice == "2":
-        cipher_content = load_from_file(".enc")
-        if not cipher_content:
-            print("❌ Impossible de charger le message chiffré depuis un fichier.")
-            return
-        cipher_b64 = cipher_content
-    else:
-        cipher_b64 = demand_cipher_b64()
+    cipher_content = load_from_file(".enc")
+    if not cipher_content:
+        print("❌ Impossible de charger le message chiffré depuis un fichier.")
+        return
+    cipher_b64 = cipher_content
     
     # Paramètres pour le déchiffrement
     iv = "4O6g9trUcd4C3DnQ"
