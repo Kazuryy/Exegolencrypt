@@ -657,10 +657,11 @@ def encrypt_message():
         print(f"\n🔒 Message chiffré pour {username} (aperçu): {preview}")
         
         # Proposer de sauvegarder le message chiffré dans un fichier
-        save_option = input("\nSouhaitez-vous sauvegarder le message chiffré dans un fichier? (o/n): ").lower()
-        
-        if save_option == 'o':
-            save_to_file(cipher_b64, f"message_chiffre_pour_{username}", ".enc")
+        print("\nLe message chiffré va être stocké dans le fichier suivant :")
+        save_to_file(cipher_b64, f"message_chiffre_pour_{username}", ".enc")
+        print(f"\n✅ Message chiffré et sauvegardé avec succès : message_chiffre_pour_{username}.enc")
+
+    
         
     except Exception as e:
         print(f"❌ Erreur lors du chiffrement: {str(e)}")
