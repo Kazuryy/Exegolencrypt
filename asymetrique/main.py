@@ -6,6 +6,7 @@ import math
 import json
 import os
 import sys
+import datetime
 
 # Ajout du chemin pour pouvoir importer les modules de chiffrement symétrique
 # Nous avons besoin de garder cet import pour le chiffrement des clés privées
@@ -15,6 +16,80 @@ from symetrique.modules import prim as sym_prim
 # --------------------------
 #  Fonctions utilitaires
 # --------------------------
+
+def save_to_file(content, default_name, extension='.txt'):
+    """Fonction utilitaire pour sauvegarder du contenu dans un fichier."""
+    # Proposer un nom de fichier par défaut
+    current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    default_filename = f"{default_name}_{current_time}{extension}"
+    
+    filename = input(f"\nNom du fichier [{default_filename}]: ").strip()
+    if not filename:
+        filename = default_filename
+    
+    # Ajouter l'extension si nécessaire
+    if not filename.endswith(extension):
+        filename += extension
+    
+    # Sauvegarder dans le répertoire courant
+    try:
+        with open(filename, 'w', encoding='utf-8') as file:
+            file.write(content)
+        print(f"\n✅ Fichier sauvegardé avec succès: {filename}")
+        return True
+    except Exception as e:
+        print(f"\n❌ Erreur lors de la sauvegarde du fichier: {str(e)}")
+        return False
+
+def load_from_file(extension='.txt'):
+    """Fonction utilitaire pour charger du contenu depuis un fichier."""
+    # Lister les fichiers avec l'extension spécifiée
+    files = [f for f in os.listdir('.') if os.path.isfile(f) and f.endswith(extension)]
+    
+    if not files:
+        print(f"\n❌ Aucun fichier {extension} trouvé dans le répertoire courant.")
+        return None
+    
+    # Afficher les fichiers disponibles
+    print(f"\nFichiers {extension} disponibles:")
+    for i, file in enumerate(files, 1):
+        print(f"{i}. {file}")
+    
+    # Demander à l'utilisateur de choisir un fichier
+    while True:
+        try:
+            choice = input("\nChoisissez un fichier (numéro) ou entrez le nom complet: ")
+            
+            # Si c'est un numéro
+            try:
+                idx = int(choice) - 1
+                if 0 <= idx < len(files):
+                    filename = files[idx]
+                    break
+                else:
+                    print("❌ Numéro invalide.")
+            except ValueError:
+                # Si c'est un nom de fichier
+                if choice in files:
+                    filename = choice
+                    break
+                elif choice + extension in files:
+                    filename = choice + extension
+                    break
+                else:
+                    print("❌ Fichier non trouvé.")
+        except KeyboardInterrupt:
+            return None
+    
+    # Charger le contenu du fichier
+    try:
+        with open(filename, 'r', encoding='utf-8') as file:
+            content = file.read()
+        print(f"\n✅ Fichier chargé avec succès: {filename}")
+        return content
+    except Exception as e:
+        print(f"\n❌ Erreur lors du chargement du fichier: {str(e)}")
+        return None
 
 def demand_msg():
     while True:
@@ -552,8 +627,21 @@ def encrypt_message():
     public_key = user_data["public_key"]
     print(f"\n✅ Clé publique de {username} récupérée: {public_key}")
     
-    # Demander le message à chiffrer
-    message = demand_msg()
+    # Demander le message à chiffrer - avec option de charger depuis un fichier
+    print("\nComment souhaitez-vous entrer votre message?\n")
+    print("1. Saisir le message directement")
+    print("2. Charger le message depuis un fichier")
+    
+    input_choice = input("\nVotre choix: ")
+    
+    if input_choice == "2":
+        message_content = load_from_file()
+        if not message_content:
+            print("❌ Impossible de charger le message depuis un fichier.")
+            return
+        message = message_content
+    else:
+        message = demand_msg()
     
     # Paramètres pour le chiffrement
     iv = "4O6g9trUcd4C3DnQ"
@@ -562,7 +650,18 @@ def encrypt_message():
     # Chiffrer le message
     try:
         cipher_b64 = encrypt(message, public_key, salt, iv)
-        print(f"\n🔒 Message chiffré pour {username}: {cipher_b64}")
+        
+        # Afficher un aperçu du message chiffré
+        preview_length = 50  # Longueur de l'aperçu
+        preview = cipher_b64[:preview_length] + ("..." if len(cipher_b64) > preview_length else "")
+        print(f"\n🔒 Message chiffré pour {username} (aperçu): {preview}")
+        
+        # Proposer de sauvegarder le message chiffré dans un fichier
+        save_option = input("\nSouhaitez-vous sauvegarder le message chiffré dans un fichier? (o/n): ").lower()
+        
+        if save_option == 'o':
+            save_to_file(cipher_b64, f"message_chiffre_pour_{username}", ".enc")
+        
     except Exception as e:
         print(f"❌ Erreur lors du chiffrement: {str(e)}")
 
@@ -597,8 +696,21 @@ def decrypt_message():
     
     print(f"\n✅ Clé privée de {username} déchiffrée avec succès.")
     
-    # Demander le message chiffré
-    cipher_b64 = demand_cipher_b64()
+    # Demander le message chiffré - avec option de charger depuis un fichier
+    print("\nComment souhaitez-vous entrer le message chiffré?\n")
+    print("1. Saisir le message chiffré directement")
+    print("2. Charger le message chiffré depuis un fichier")
+    
+    input_choice = input("\nVotre choix: ")
+    
+    if input_choice == "2":
+        cipher_content = load_from_file(".enc")
+        if not cipher_content:
+            print("❌ Impossible de charger le message chiffré depuis un fichier.")
+            return
+        cipher_b64 = cipher_content
+    else:
+        cipher_b64 = demand_cipher_b64()
     
     # Paramètres pour le déchiffrement
     iv = "4O6g9trUcd4C3DnQ"
@@ -606,7 +718,23 @@ def decrypt_message():
     # Déchiffrer le message
     try:
         decrypted = decrypt(cipher_b64, private_key, iv)
-        print(f"\n🔓 Message déchiffré: {decrypted}")
+        
+        # Afficher un aperçu du message
+        preview_length = 100  # Longueur de l'aperçu
+        preview = decrypted[:preview_length] + ("..." if len(decrypted) > preview_length else "")
+        print(f"\n🔓 Message déchiffré (aperçu): {preview}")
+        
+        # Proposer de sauvegarder le message dans un fichier
+        save_option = input("\nSouhaitez-vous sauvegarder le message déchiffré dans un fichier? (o/n): ").lower()
+        
+        if save_option == 'o':
+            save_to_file(decrypted, "message_dechiffre")
+        else:
+            # Si l'utilisateur refuse la sauvegarde, proposer d'afficher le message complet
+            view_option = input("\nSouhaitez-vous afficher le message complet dans le terminal? (o/n): ").lower()
+            if view_option == 'o':
+                print(f"\n📄 Message complet:\n{decrypted}")
+            
     except ValueError as err:
         print(f"⚠️ Erreur: {err}")
     except Exception as e:
