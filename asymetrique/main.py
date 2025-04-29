@@ -655,11 +655,9 @@ def encrypt_message():
         preview_length = 50  # Longueur de l'aperçu
         preview = cipher_b64[:preview_length] + ("..." if len(cipher_b64) > preview_length else "")
         print(f"\n🔒 Message chiffré pour {username} (aperçu): {preview}")
-        
-        # Proposer de sauvegarder le message chiffré dans un fichier
-        print("\nLe message chiffré va être stocké dans le fichier suivant :")
+
+        # Sauvegarder le message chiffré dans un fichier
         save_to_file(cipher_b64, f"message_chiffre_pour_{username}", ".enc")
-        print(f"\n✅ Message chiffré et sauvegardé avec succès : message_chiffre_pour_{username}.enc")
 
     
         
